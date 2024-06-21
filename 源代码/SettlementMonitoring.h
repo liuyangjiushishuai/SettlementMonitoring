@@ -511,6 +511,7 @@ public:
 	string MaxSettlementRatePoint;   //最大沉降速度点
 	double MaxSettlementRate;     //最大沉降速度
 	string MaxSettlementRateGZW;   //最大沉降速度构筑物
+	int MoreLimitGZWNum;        //超限的构筑物数量
 
 	QY(string n/*区域名称*/, string EN/*工程名称*/, string CN/*公司名称*/)
 	{
@@ -558,16 +559,30 @@ public:
 	void calculateMinAverageAccumulateSettlementAmount()
 	{
 		double res = 1000000;
+		double CompareValue = 1000000;
 		string s;  //最小平均累计沉降量所对应的构筑物
+		int count = 0;
 		for (int i = 0; i < ContainGZW.size(); i++)
 		{
 			double rate = ContainGZW[i].frequency;   //该构筑物所测频率
 			double CurrentAverageAccumulateSettlementAmount = ContainGZW[i].AverageAccumulateSettlementAmount[rate - 1];
-			if (CurrentAverageAccumulateSettlementAmount < res)
+			if (abs(CurrentAverageAccumulateSettlementAmount + 1000) < 1e-6)
+			{
+				count++;
+				continue;
+			}
+			if (fabs(fabs(CurrentAverageAccumulateSettlementAmount) - CompareValue) >= 1e-6 &&abs(CurrentAverageAccumulateSettlementAmount) <
+				CompareValue)
 			{
 				res = CurrentAverageAccumulateSettlementAmount;
+				CompareValue = abs(CurrentAverageAccumulateSettlementAmount);
 				s = ContainGZW[i].name;
 			}
+		}
+		if (count == ContainGZW.size())
+		{
+			s = "None";
+			res = -1000;
 		}
 		this->MinAverageAccumulateSettlementAmount = res;
 		this->MinAASettlementAmountGZW = s;
@@ -575,17 +590,31 @@ public:
 	//计算最大平均沉降速度
 	void calculateMaxAverageSettlementRate()
 	{
-		double res = -1;
+		double res = 0;
+		double CompareValue = 0;
+		int count = 0;
 		string s;  //最大平均沉降速度所对应的构筑物
 		for (int i = 0; i < ContainGZW.size(); i++)
 		{
 			double rate = ContainGZW[i].frequency;   //该构筑物所测频率
 			double CurrentAverageSettlementRate = ContainGZW[i].AverageSettlementRate[rate - 1];
-			if (CurrentAverageSettlementRate > res)
+			if (abs(CurrentAverageSettlementRate + 1000) < 1e-6)
+			{
+				count++;
+				continue;
+			}
+			if (fabs(fabs(CurrentAverageSettlementRate) - CompareValue) >= 1e-6 &&
+				abs(CurrentAverageSettlementRate) > CompareValue)
 			{
 				res = CurrentAverageSettlementRate;
+				CompareValue = abs(CurrentAverageSettlementRate);
 				s = ContainGZW[i].name;
 			}
+		}
+		if (count == ContainGZW.size())
+		{
+			res = -1000;
+			s = "None";
 		}
 		this->MaxAverageSettlementRate = res;
 		this->MaxASettlementRateGZW = s;
@@ -594,16 +623,30 @@ public:
 	void calculateMinAverageSettlementRate()
 	{
 		double res = 1000000;
+		double CompareValue = 1000000;
 		string s;  //最小平均沉降速度所对应的构筑物
+		int count = 0;
 		for (int i = 0; i < ContainGZW.size(); i++)
 		{
 			double rate = ContainGZW[i].frequency;   //该构筑物所测频率
 			double CurrentAverageSettlementRate = ContainGZW[i].AverageSettlementRate[rate - 1];
-			if (CurrentAverageSettlementRate < res)
+			if (abs(CurrentAverageSettlementRate + 1000) < 1e-6)
+			{
+				count++;
+				continue;
+			}
+			if (fabs(fabs(CurrentAverageSettlementRate) - CompareValue) >= 1e-6 && abs(CurrentAverageSettlementRate) <
+				CompareValue)
 			{
 				res = CurrentAverageSettlementRate;
+				CompareValue = abs(CurrentAverageSettlementRate);
 				s = ContainGZW[i].name;
 			}
+		}
+		if (count == ContainGZW.size())
+		{
+			res = -1000;
+			s = "None";
 		}
 		this->MinAverageSettlementRate = res;
 		this->MinASettlementRateGZW = s;
@@ -611,29 +654,41 @@ public:
 	//计算最大沉降速度
 	void calculateMaxSettlementRate()
 	{
-		double res = -1;
+		double res = 0;
+		double CompareValue = 0;
 		string s;  //最大沉降速度点
 		string s2; //最大沉降速度构筑物
+		int count = 0;
 		for (int i = 0; i < ContainGZW.size(); i++)
 		{
 			int ContainPointNum = ContainGZW[i].ContainSettlementPoint.size(); //该构筑物所包含的点数
 			int frequency = ContainGZW[i].frequency;    //该构筑物所测的期数
 			if (ContainPointNum == 0)
 			{
-				cout << "该构筑物没有监测点" << endl;
-				system("pause");
-				exit(1);
+				continue;
 			}
 			for (int j = 0; j < ContainPointNum; j++)
 			{
 				double CurrentSettlementRate = ContainGZW[i].ContainSettlementPoint[j].SettlementSpeed[frequency - 1];
-				if (CurrentSettlementRate > res)
+				if (abs(CurrentSettlementRate + 1000) < 1e-6)
+				{
+					continue;
+				}
+				if (abs(abs(CurrentSettlementRate)- CompareValue) >1e-6&& abs(CurrentSettlementRate)> CompareValue)
 				{
 					res = CurrentSettlementRate;
+					CompareValue = abs(CurrentSettlementRate);
 					s = ContainGZW[i].ContainSettlementPoint[j].name;
 					s2 = ContainGZW[i].name;
 				}
+				count++;
 			}
+		}
+		if (count == 0)
+		{
+			s = "None";
+			s2 = "None";
+			res = -1000;
 		}
 		this->MaxSettlementRate = res;
 		this->MaxSettlementRatePoint = s;
@@ -646,11 +701,16 @@ public:
 		for (int i = 0; i < ContainGZW.size(); i++)
 		{
 			double CurrentMaxSettlementRate = ContainGZW[i].calcualteMaxSettlementRate();
-			if (CurrentMaxSettlementRate >= SettlementRateLimit)
+			if (abs(CurrentMaxSettlementRate+1000)<1e-6)
+			{
+				continue;
+			}
+			if (abs(abs(CurrentMaxSettlementRate)-SettlementRateLimit)>1e-6&&abs(CurrentMaxSettlementRate)> SettlementRateLimit)
 			{
 				res++;
 			}
 		}
+		this->MoreLimitGZWNum = res;
 		return res;
 	}
 };
@@ -1138,6 +1198,22 @@ public:
 				this->qy[i].ContainGZW[j].calcualteMinSettlementRate();
 			}
 		}
+		//计算最大平均累积沉降量、计算最小平均累积沉降量、计算最大平均沉降速度、计算最小平均沉降速度、计算最大沉降速度、统计超限的构筑物
+		for (int i = 0; i < qy.size(); i++)
+		{
+			//计算最大平均累积沉降量
+			qy[i].calculateMaxAverageAccumulateSettlementAmount();
+			//计算最小平均累积沉降量
+			qy[i].calculateMinAverageAccumulateSettlementAmount();
+			//计算最大平均沉降速度
+			qy[i].calculateMaxAverageSettlementRate();
+			//计算最小平均沉降速度
+			qy[i].calculateMinAverageSettlementRate();
+			//计算最大沉降速度
+			qy[i].calculateMaxSettlementRate();
+			//统计超限的构筑物
+			qy[i].countMoreLimitGZW();
+		}
 		//测试
 		for (int i = 0; i < this->qy.size(); i++)
 		{
@@ -1182,6 +1258,18 @@ public:
 					fixed << setprecision(3) << SaveThreeDecimal(this->qy[i].ContainGZW[j].LatestMaxSettlementRate) << " " <<
 					SaveThreeDecimal(this->qy[i].ContainGZW[j].LatestMinSettlementRate) << endl;
 			}
+		}
+		//测试
+		for (int i = 0; i < this->qy.size(); i++)
+		{
+			cout << i + 1 << "    " << "最大平均累积沉降量:" << qy[i].MaxAASettlementAmountGZW<<","<<fixed << setprecision(2) <<
+				SaveTwoDecimal(qy[i].MaxAverageAccumulateSettlementAmount)
+				<< "最小平均累积沉降量:" <<qy[i].MinAASettlementAmountGZW<<"," << SaveTwoDecimal(qy[i].MinAverageAccumulateSettlementAmount)
+				<< "最大平均沉降速度:" <<qy[i].MaxASettlementRateGZW<<","<< fixed << setprecision(3)
+				<< SaveThreeDecimal(qy[i].MaxAverageSettlementRate) << "最小平均沉降速度:" <<qy[i].MinASettlementRateGZW<<","<<
+				SaveThreeDecimal(qy[i].MinAverageSettlementRate) <<
+				"最大沉降速度:" <<qy[i].MaxSettlementRateGZW<<","<<qy[i].MaxSettlementRatePoint<<","<<SaveThreeDecimal(qy[i].MaxSettlementRate) 
+				<< "超限构筑物数量:" << qy[i].MoreLimitGZWNum << endl;
 		}
 	}
 };
